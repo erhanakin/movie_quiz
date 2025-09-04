@@ -1,0 +1,563 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+}
+
+/* PERFECTED: App background with exact height calculation */
+.app-background {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Minimal safe area */
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.app-background::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* PERFECTED: Container with exact calculations */
+.MuiContainer-root {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 6px !important; /* Reduced from 8px */
+  margin: 0 !important;
+  overflow-x: hidden !important;
+  min-height: calc(100vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+  display: flex;
+  flex-direction: column;
+}
+
+/* PERFECTED: Ultra-compact typography */
+.main-title {
+  font-family: "Playfair Display", serif !important;
+  font-weight: 700 !important;
+  font-size: 1.6rem !important; /* Reduced from 1.8rem */
+  text-align: center !important;
+  margin: 4px 0 12px 0 !important; /* Reduced margins */
+  background: linear-gradient(135deg, #10b981, #3b82f6) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.category-title {
+  font-family: "Playfair Display", serif !important;
+  font-weight: 600 !important;
+  font-size: 1.2rem !important; /* Reduced from 1.3rem */
+  text-align: center !important;
+  color: #10b981 !important;
+  margin: 0 0 8px 0 !important; /* Reduced margin */
+}
+
+/* PERFECTED: Compact grid */
+.MuiGrid-container {
+  width: 100% !important;
+  margin: 0 !important;
+  gap: 6px !important; /* Reduced from 8px */
+}
+
+.MuiGrid-item {
+  padding: 0 !important;
+}
+
+/* PERFECTED: Smaller category cards */
+.category-card {
+  background: rgba(30, 41, 59, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 12px !important; /* Reduced from 16px */
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 75px !important; /* Reduced from 85px */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.category-card:hover::before,
+.category-card:active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+  opacity: 1;
+}
+
+.category-icon {
+  font-size: 1.8rem !important; /* Reduced from 2rem */
+  margin-bottom: 2px !important; /* Reduced from 4px */
+}
+
+.category-name {
+  font-family: "Inter", sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important; /* Reduced from 0.85rem */
+  color: #e2e8f0 !important;
+  text-align: center !important;
+  letter-spacing: 0.025em !important;
+  line-height: 1.1 !important; /* Tighter line height */
+}
+
+/* PERFECTED: Quiz container with precise height calculations */
+.quiz-container {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* CRITICAL: Exact calculation for all content including game over */
+  min-height: calc(100vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 24px);
+  gap: 8px !important; /* Reduced from 12px */
+}
+
+/* PERFECTED: Ultra-compact score/timer */
+.score-timer-row {
+  background: rgba(30, 41, 59, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 10px !important; /* Reduced from 12px */
+  width: 100% !important;
+  flex-shrink: 0 !important;
+}
+
+.score-timer-content {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 6px !important; /* Reduced from 8px */
+}
+
+.score-text, .timer-text {
+  font-family: "Inter", sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important; /* Reduced from 0.9rem */
+  color: #e2e8f0 !important;
+}
+
+.score-value { color: #10b981 !important; }
+.timer-value { color: #3b82f6 !important; }
+.timer-warning { color: #ef4444 !important; }
+
+/* Compact progress bar */
+.timer-progress-container { width: 100% !important; }
+
+.timer-progress-bar {
+  width: 100% !important;
+  height: 5px !important; /* Reduced from 6px */
+  background-color: #334155 !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+}
+
+.timer-progress-fill {
+  height: 100% !important;
+  background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%) !important;
+  border-radius: 3px !important;
+  transition: width 1s linear !important;
+}
+
+.timer-progress-fill.warning { background: linear-gradient(90deg, #ef4444 0%, #f59e0b 100%) !important; }
+.timer-progress-fill.critical { background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%) !important; }
+
+.timer-percentage {
+  font-size: 0.65rem !important; /* Reduced from 0.7rem */
+  color: #94a3b8 !important;
+  text-align: center !important;
+  margin-top: 2px !important; /* Reduced from 3px */
+}
+
+/* PERFECTED: Ultra-compact question card */
+.question-card {
+  background: rgba(30, 41, 59, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 14px !important; /* Reduced from 16px */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  width: 100% !important;
+  flex-shrink: 0 !important;
+}
+
+.question-text {
+  font-family: "Inter", sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important; /* Reduced from 1rem */
+  line-height: 1.25 !important; /* Tighter line height */
+  color: #f1f5f9 !important;
+  margin: 0 !important;
+}
+
+.question-keywords {
+  font-family: "Inter", sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important; /* Reduced from 0.9rem */
+  color: #10b981 !important;
+  font-style: italic !important;
+  margin-top: 6px !important; /* Reduced from 8px */
+}
+
+/* PERFECTED: Smaller poster */
+.poster-container {
+  display: flex !important;
+  justify-content: center !important;
+  margin: 8px 0 !important; /* Reduced from 12px */
+}
+
+.poster-image {
+  max-width: 100% !important;
+  max-height: 160px !important; /* Reduced from 180px */
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* PERFECTED: Answers container with exact spacing */
+.answers-container {
+  flex-shrink: 0 !important;
+  margin-bottom: 6px !important; /* Reduced from 12px */
+}
+
+/* PERFECTED: Compact answer buttons */
+.answer-button {
+  background: linear-gradient(135deg, #1e293b, #334155) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 10px !important; /* Reduced from 12px */
+  margin-bottom: 6px !important; /* Reduced from 8px */
+  color: #e2e8f0 !important;
+  font-family: "Inter", sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important; /* Reduced from 0.9rem */
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 44px !important; /* Reduced from 48px */
+  line-height: 1.15 !important; /* Tighter line height */
+}
+
+.answer-button:hover:not(:disabled) {
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  background: linear-gradient(135deg, #334155, #475569) !important;
+}
+
+.answer-button:active { transform: scale(0.98) !important; }
+.answer-button:disabled { cursor: not-allowed !important; opacity: 0.7 !important; }
+
+.answer-letter {
+  background: linear-gradient(135deg, #10b981, #3b82f6) !important;
+  color: white !important;
+  border-radius: 6px !important;
+  width: 26px !important; /* Reduced from 28px */
+  height: 26px !important; /* Reduced from 28px */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  margin-right: 10px !important; /* Reduced from 12px */
+  flex-shrink: 0 !important;
+  font-size: 0.75rem !important; /* Reduced from 0.8rem */
+}
+
+.answer-correct {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+.answer-wrong {
+  background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* CRITICAL: Result panel with exact height limits */
+.result-panel {
+  background: rgba(30, 41, 59, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border-radius: 12px !important;
+  padding: 12px !important; /* Reduced from 16px */
+  text-align: center !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  width: 100% !important;
+  /* CRITICAL: Exact height to prevent overflow */
+  max-height: 30vh !important; /* Reduced from 40vh */
+  overflow-y: auto !important;
+  flex-shrink: 0 !important;
+  margin-bottom: 4px !important; /* Small spacing */
+}
+
+.result-correct { border-color: rgba(16, 185, 129, 0.4) !important; }
+.result-wrong { border-color: rgba(239, 68, 68, 0.4) !important; }
+
+.result-title {
+  font-family: "Playfair Display", serif !important;
+  font-weight: 700 !important;
+  font-size: 1.2rem !important; /* Reduced from 1.3rem */
+  margin-bottom: 6px !important; /* Reduced from 8px */
+}
+
+.result-explanation {
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.8rem !important; /* Reduced from 0.85rem */
+  line-height: 1.3 !important; /* Tighter line height */
+  color: #cbd5e1 !important;
+  margin-bottom: 12px !important; /* Reduced from 16px */
+}
+
+/* CRITICAL: Game over section with exact height limits */
+.game-over-section {
+  text-align: center !important;
+  width: 100% !important;
+  /* CRITICAL: Reduced height to prevent overflow */
+  max-height: 25vh !important; /* Reduced from 35vh */
+  overflow-y: auto !important;
+  flex-shrink: 0 !important;
+  padding-bottom: max(4px, env(safe-area-inset-bottom, 0)) !important; /* Minimal bottom padding */
+}
+
+.game-over-title {
+  font-family: "Playfair Display", serif !important;
+  font-weight: 700 !important;
+  font-size: 1.3rem !important; /* Reduced from 1.5rem */
+  color: #e2e8f0 !important;
+  margin-bottom: 6px !important; /* Reduced from 8px */
+}
+
+.final-score {
+  font-family: "Inter", sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 1.2rem !important; /* Reduced from 1.3rem */
+  color: #10b981 !important;
+  margin-bottom: 12px !important; /* Reduced from 16px */
+}
+
+/* PERFECTED: Ultra-compact action buttons */
+.primary-button, .secondary-button {
+  border-radius: 8px !important;
+  padding: 10px 16px !important; /* Reduced padding */
+  font-family: "Inter", sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important; /* Reduced from 0.9rem */
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  margin: 2px !important; /* Reduced from 4px */
+  min-height: 40px !important; /* Reduced from 44px */
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.secondary-button {
+  background: transparent !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  color: #10b981 !important;
+}
+
+.primary-button:hover { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important; }
+.secondary-button:hover { background: rgba(16, 185, 129, 0.1) !important; }
+
+/* Loading states */
+.loading-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 60vh !important;
+  gap: 16px !important;
+}
+
+.loading-text, .error-text {
+  font-family: "Inter", sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+  text-align: center !important;
+  padding: 20px !important;
+}
+
+.loading-text { color: #e2e8f0 !important; }
+.error-text { color: #ef4444 !important; }
+
+/* MOBILE RESPONSIVE: Extra-compact for phones */
+@media (max-width: 768px) {
+  .MuiContainer-root { 
+    padding: 4px !important; 
+  }
+  
+  .main-title {
+    font-size: 1.4rem !important;
+    margin: 2px 0 8px 0 !important;
+  }
+  
+  .category-title { 
+    font-size: 1.1rem !important; 
+    margin: 0 0 6px 0 !important;
+  }
+  
+  .category-card {
+    padding: 10px !important;
+    height: 70px !important;
+  }
+  
+  .category-icon { font-size: 1.6rem !important; }
+  .category-name { font-size: 0.75rem !important; }
+  
+  .question-card { padding: 12px !important; }
+  .question-text { font-size: 0.9rem !important; }
+  
+  .answer-button {
+    padding: 8px !important;
+    font-size: 0.8rem !important;
+    min-height: 40px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .answer-letter {
+    width: 24px !important;
+    height: 24px !important;
+    margin-right: 8px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .poster-image { max-height: 140px !important; }
+  
+  .result-panel { 
+    padding: 10px !important; 
+    max-height: 25vh !important;
+  }
+  
+  .result-title { font-size: 1.1rem !important; }
+  .result-explanation { 
+    font-size: 0.75rem !important; 
+    margin-bottom: 10px !important;
+  }
+  
+  .game-over-section { max-height: 20vh !important; }
+  .game-over-title { font-size: 1.2rem !important; }
+  .final-score { font-size: 1.1rem !important; }
+  
+  .primary-button, .secondary-button {
+    padding: 8px 14px !important;
+    font-size: 0.8rem !important;
+    margin: 2px !important;
+    min-height: 36px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .MuiContainer-root { padding: 3px !important; }
+  
+  .main-title { 
+    font-size: 1.25rem !important; 
+    margin: 1px 0 6px 0 !important;
+  }
+  .category-title { font-size: 1rem !important; }
+  
+  .category-card {
+    padding: 8px !important;
+    height: 65px !important;
+  }
+  
+  .category-icon { font-size: 1.5rem !important; }
+  .category-name { font-size: 0.7rem !important; }
+  
+  .question-text { font-size: 0.85rem !important; }
+  
+  .answer-button {
+    padding: 6px !important;
+    font-size: 0.75rem !important;
+    min-height: 36px !important;
+  }
+  
+  .answer-letter {
+    width: 22px !important;
+    height: 22px !important;
+    margin-right: 6px !important;
+    font-size: 0.65rem !important;
+  }
+  
+  .poster-image { max-height: 120px !important; }
+  
+  .result-panel { 
+    padding: 8px !important;
+    max-height: 22vh !important;
+  }
+  
+  .result-title { font-size: 1rem !important; }
+  .result-explanation { font-size: 0.7rem !important; }
+  
+  .game-over-section { max-height: 18vh !important; }
+  .game-over-title { font-size: 1.1rem !important; }
+  .final-score { font-size: 1rem !important; }
+  
+  .primary-button, .secondary-button {
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
+    min-height: 32px !important;
+  }
+}
+
+/* Landscape phones - maximum compactness */
+@media (max-width: 800px) and (max-height: 500px) {
+  .quiz-container { gap: 4px !important; }
+  .question-card { padding: 6px !important; }
+  .poster-image { max-height: 80px !important; }
+  .result-panel { max-height: 20vh !important; }
+  .game-over-section { max-height: 15vh !important; }
+}
+
+/* Prevent zoom and improve touch */
+input, select, textarea, button {
+  font-size: 16px !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Smooth scrolling */
+* { -webkit-overflow-scrolling: touch !important; }
+
+/* Prevent horizontal scroll */
+html, body, .MuiContainer-root, .quiz-container, .question-card, .result-panel {
+  overflow-x: hidden !important;
+}
