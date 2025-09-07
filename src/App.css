@@ -240,7 +240,7 @@ html, body {
 
 .poster-image {
   max-width: 100% !important;
-  max-height: 160px !important; /* Reduced from 180px */
+  max-height: 290px !important; /* Reduced from 180px */
   object-fit: contain !important;
   border-radius: 8px !important;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
@@ -459,7 +459,7 @@ html, body {
     font-size: 0.7rem !important;
   }
   
-  .poster-image { max-height: 140px !important; }
+  .poster-image { max-height: 240px !important; }
   
   .result-panel { 
     padding: 10px !important; 
@@ -516,7 +516,7 @@ html, body {
     font-size: 0.65rem !important;
   }
   
-  .poster-image { max-height: 120px !important; }
+  .poster-image { max-height: 200px !important; }
   
   .result-panel { 
     padding: 8px !important;
@@ -541,7 +541,7 @@ html, body {
 @media (max-width: 800px) and (max-height: 500px) {
   .quiz-container { gap: 4px !important; }
   .question-card { padding: 6px !important; }
-  .poster-image { max-height: 80px !important; }
+  .poster-image { max-height: 130px !important; }
   .result-panel { max-height: 20vh !important; }
   .game-over-section { max-height: 15vh !important; }
 }

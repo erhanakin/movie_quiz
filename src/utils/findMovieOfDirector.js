@@ -1,5 +1,3 @@
-// src/utils/findMovieOfDirector.js - ENHANCED VERSION (Advanced duplicate prevention integrated)
-
 const DEBUG = true;
 
 const debugLog = (label, data) => {
@@ -34,18 +32,8 @@ const findAllMoviesForDirector = (movieData, directorImdb) => {
     return movies;
 };
 
-// Function to create unique movie title with year for comparison
-const createMovieKey = (movie) => {
-    return `${movie.movieTitle.toLowerCase().trim()}${movie.year ? `_${movie.year}` : ''}`;
-};
-
-// Function to format movie display name
-const formatMovieDisplay = (movie) => {
-    return `${movie.movieTitle}${movie.year ? ` (${movie.year})` : ''}`;
-};
-
 export const generateFindMovieOfDirectorQuestion = (movieData, difficulty = 'easy') => {
-    debugLog('Generating Find Movie of Director Question', { difficulty });
+    debugLog('Generating Find Movie Question', { difficulty });
 
     // Get all unique directors from movies with proper difficulty
     const uniqueDirectors = [...new Set(movieData
@@ -69,7 +57,7 @@ export const generateFindMovieOfDirectorQuestion = (movieData, difficulty = 'eas
     debugLog('3. Eligible Directors (not recently used)', eligibleDirectors);
 
     if (!eligibleDirectors.length) {
-        debugLog('No eligible directors found, clearing history', null);
+        debugLog('No eligible directors found, starting over', null);
         recentDirectors.length = 0; // Clear history if we run out of directors
         return generateFindMovieOfDirectorQuestion(movieData, difficulty);
     }
@@ -83,8 +71,6 @@ export const generateFindMovieOfDirectorQuestion = (movieData, difficulty = 'eas
     if (recentDirectors.length > HISTORY_LENGTH) {
         recentDirectors.shift();
     }
-    
-    debugLog('5. Updated Recent Directors History', recentDirectors);
 
     // Find all movies for the selected director
     const directorMovies = findAllMoviesForDirector(movieData, selectedDirector.imdb);
@@ -96,8 +82,6 @@ export const generateFindMovieOfDirectorQuestion = (movieData, difficulty = 'eas
          (difficulty === 'hard' && ['Easy', 'Hard'].includes(movie.difficulty)))
     );
     
-    debugLog('7. Eligible Director Movies', eligibleDirectorMovies);
-    
     if (!eligibleDirectorMovies.length) {
         debugLog('No eligible movies found for director, trying another', null);
         return generateFindMovieOfDirectorQuestion(movieData, difficulty);
@@ -107,20 +91,13 @@ export const generateFindMovieOfDirectorQuestion = (movieData, difficulty = 'eas
     const correctMovie = getRandomItems(eligibleDirectorMovies, 1)[0];
     debugLog('8. Selected Correct Movie', correctMovie);
 
-    // Create a set of director's movie keys to exclude duplicates
-    const directorMovieKeys = new Set(directorMovies.map(createMovieKey));
-    debugLog('9. Director Movie Keys to Exclude', Array.from(directorMovieKeys));
-
-    // Get all eligible movies (excluding director's movies) with duplicate prevention
-    const eligibleOtherMovies = movieData.filter(movie => {
-        const movieKey = createMovieKey(movie);
-        return movie.movieIMDB &&
-               !directorMovieKeys.has(movieKey) && // Use title+year comparison
-               ((difficulty === 'easy' && movie.difficulty === 'Easy') ||
-                (difficulty === 'hard' && ['Easy', 'Hard'].includes(movie.difficulty)));
-    });
-    
-    debugLog('10. Eligible Other Movies (List C)', eligibleOtherMovies);
+    // Get all eligible movies (excluding director's movies)
+    const eligibleOtherMovies = movieData.filter(movie => 
+        movie.movieIMDB &&
+        !directorMovies.some(m => m.movieIMDB === movie.movieIMDB) &&
+        ((difficulty === 'easy' && movie.difficulty === 'Easy') ||
+         (difficulty === 'hard' && ['Easy', 'Hard'].includes(movie.difficulty)))
+    );
     
     if (eligibleOtherMovies.length < 3) {
         debugLog('Not enough movies for wrong answers, trying again', null);
@@ -131,32 +108,20 @@ export const generateFindMovieOfDirectorQuestion = (movieData, difficulty = 'eas
     const wrongAnswers = getRandomItems(eligibleOtherMovies, 3);
     debugLog('11. Selected Wrong Answers', wrongAnswers);
 
-    // Create choices and verify uniqueness
-    const correctAnswer = formatMovieDisplay(correctMovie);
-    const wrongChoices = wrongAnswers.map(formatMovieDisplay);
-    
-    // Double-check for duplicates and replace if found
-    const allChoices = [correctAnswer, ...wrongChoices];
-    const uniqueChoices = [...new Set(allChoices)];
-    
-    if (uniqueChoices.length < 4) {
-        debugLog('Duplicate movie titles detected, trying again', {
-            originalChoices: allChoices,
-            uniqueChoices: uniqueChoices
-        });
-        return generateFindMovieOfDirectorQuestion(movieData, difficulty);
-    }
-
-    // Randomize the final choices
-    const choices = getRandomItems(allChoices, 4);
+    // Combine and randomize choices
+    const choices = getRandomItems([
+        `${correctMovie.movieTitle}${correctMovie.year ? ` (${correctMovie.year})` : ''}`,
+        ...wrongAnswers.map(movie => 
+            `${movie.movieTitle}${movie.year ? ` (${movie.year})` : ''}`
+        )
+    ], 4);
 
     const questionData = {
         question: `Which movie was directed by ${selectedDirector.name}?`,
         choices,
-        correctAnswer,
+        correctAnswer: `${correctMovie.movieTitle}${correctMovie.year ? ` (${correctMovie.year})` : ''}`,
         explanation: `${selectedDirector.name} directed ${correctMovie.movieTitle}${
-            correctMovie.year ? ` (${correctMovie.year})` : ''
-        }`
+            correctMovie.year ? ` (${correctMovie.year})` : ''}`
     };
 
     debugLog('12. Final Question Data', questionData);
