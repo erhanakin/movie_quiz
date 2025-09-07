@@ -77,3 +77,8 @@ jspm_packages/
 
 # Optional eslint cache
 .eslintcache
+
+# Large data files
+public/assets/movie_data_part*.json.gz
+# Keep the .gitignore entry for movie_data.json for safety
+public/assets/movie_data.json
