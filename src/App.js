@@ -16,6 +16,99 @@ import "./App.css"
 import { generateOscarQuestion } from "./utils/oscarQuestions"
 import { getUltimateMixQuestions } from "./utils/ultimateMix"
 
+// SIMPLIFIED: Back to basics with better error diagnostics
+const DATABASE_CONFIG = {
+  parts: ['movie_data_part1.json', 'movie_data_part2.json', 'movie_data_part3.json', 'movie_data_part4.json'],
+  basePath: '/assets/'
+}
+
+// SIMPLIFIED: Sequential loading with detailed error diagnostics
+const loadMovieDatabase = async () => {
+  console.log('🎬 Starting movie database loading...')
+  const startTime = Date.now()
+  
+  const allData = []
+  
+  // Load each part sequentially (one at a time)
+  for (let i = 0; i < DATABASE_CONFIG.parts.length; i++) {
+    const partName = DATABASE_CONFIG.parts[i]
+    const fullPath = `${DATABASE_CONFIG.basePath}${partName}`
+    console.log(`Loading part ${i + 1}/${DATABASE_CONFIG.parts.length}: ${partName} from ${fullPath}`)
+    
+    try {
+      console.log(`Fetching ${fullPath}...`)
+      const response = await fetch(fullPath)
+      
+      console.log(`Response status: ${response.status} ${response.statusText}`)
+      console.log(`Response headers:`, {
+        contentType: response.headers.get('content-type'),
+        contentLength: response.headers.get('content-length')
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      console.log(`Getting response text for ${partName}...`)
+      const responseText = await response.text()
+      console.log(`Response text length: ${responseText.length}`)
+      console.log(`First 100 chars: ${responseText.substring(0, 100)}`)
+      
+      if (!responseText || responseText.trim().length === 0) {
+        throw new Error(`Empty response for ${partName}`)
+      }
+      
+      console.log(`Parsing JSON for ${partName}...`)
+      let partData
+      try {
+        partData = JSON.parse(responseText)
+      } catch (jsonError) {
+        console.error(`JSON parse error for ${partName}:`, jsonError)
+        console.error(`Problematic text around error:`, responseText.substring(Math.max(0, jsonError.lineNumber - 50), jsonError.lineNumber + 50))
+        throw new Error(`JSON parse failed for ${partName}: ${jsonError.message}`)
+      }
+      
+      console.log(`Validating data for ${partName}...`)
+      if (!Array.isArray(partData)) {
+        console.error(`Data is not array for ${partName}, got:`, typeof partData, partData)
+        throw new Error(`${partName} does not contain an array`)
+      }
+      
+      console.log(`✓ Loaded ${partName} with ${partData.length} records`)
+      allData.push(...partData) // Add all records from this part
+      
+    } catch (error) {
+      console.error(`✗ Detailed error loading ${partName}:`)
+      console.error(`Error name: ${error.name}`)
+      console.error(`Error message: ${error.message}`)
+      console.error(`Error stack:`, error.stack)
+      console.error(`Full error object:`, error)
+      
+      // Try to give more specific guidance
+      if (error.message.includes('404')) {
+        console.error(`❌ File not found: ${fullPath}`)
+        console.error(`Make sure the file exists in the public/assets folder`)
+      } else if (error.message.includes('JSON')) {
+        console.error(`❌ JSON syntax error in ${partName}`)
+        console.error(`Check if the file has valid JSON syntax`)
+      } else if (error.message.includes('Empty')) {
+        console.error(`❌ File is empty: ${partName}`)
+      } else {
+        console.error(`❌ Unknown error loading ${partName}`)
+      }
+      
+      throw new Error(`Failed to load ${partName}: ${error.message}`)
+    }
+  }
+  
+  const loadTime = Date.now() - startTime
+  console.log(`🎉 Movie database loaded successfully!`)
+  console.log(`📊 Total records: ${allData.length}`)
+  console.log(`⏱️ Load time: ${loadTime}ms`)
+  
+  return allData
+}
+
 // ADDED: Device detection hook
 const useDeviceDetection = () => {
   const [deviceInfo, setDeviceInfo] = useState({
@@ -126,6 +219,7 @@ const MovieQuizApp = () => {
   const [difficulty, setDifficulty] = useState("easy")
   const [movieData, setMovieData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadingProgress, setLoadingProgress] = useState("Initializing...")
   const [error, setError] = useState(null)
   const [chainState, setChainState] = useState(null)
   const [oscarData, setOscarData] = useState(null)
@@ -230,14 +324,17 @@ const MovieQuizApp = () => {
     }
   }, [device.isMobile])
 
+  // UPDATED: Enhanced data loading with multi-part support
   useEffect(() => {
-    fetch("/assets/movie_data.json")
-      .then((response) => {
-        if (!response.ok) throw new Error("Failed to load movie data")
-        return response.json()
-      })
-      .then((data) => {
-        const processedData = data.map((item) => ({
+    const loadAllData = async () => {
+      try {
+        setLoadingProgress("Loading movie database parts...")
+        
+        // Load movie database parts
+        const movieDataResult = await loadMovieDatabase()
+        
+        // Process the combined movie data
+        const processedData = movieDataResult.map((item) => ({
           ...item,
           movieTitle: cleanDisplayName(item.movieTitle || ""),
           referenceActor: cleanDisplayName(item.referenceActor || ""),
@@ -252,36 +349,42 @@ const MovieQuizApp = () => {
               name: cleanDisplayName(a.name || ""),
             })) || [],
         }))
+        
+        console.log("Movie database is loaded successfully")
         setMovieData(processedData)
-      })
-      .catch((err) => {
-        console.error("Error loading movie data:", err)
-        setError("Failed to load movie data. Please refresh the page.")
-      })
+        setLoadingProgress("Loading Oscar data...")
 
-    fetch("/assets/oscar_data.json")
-      .then((response) => {
-        if (!response.ok) throw new Error("Failed to load Oscar data")
-        return response.json()
-      })
-      .then((data) => {
+        // Load Oscar data
+        const oscarResponse = await fetch("/assets/oscar_data.json")
+        if (!oscarResponse.ok) throw new Error("Failed to load Oscar data")
+        
+        const oscarDataResult = await oscarResponse.json()
         const processedOscarData = {
-          ...data,
+          ...oscarDataResult,
           records:
-            data.records?.map((record) => ({
+            oscarDataResult.records?.map((record) => ({
               ...record,
               names: cleanDisplayName(record.names || ""),
               film: cleanDisplayName(record.film || ""),
             })) || [],
         }
+        
         setOscarData(processedOscarData)
+        setLoadingProgress("Ready to play!")
+        
+        // Small delay to show the success message
+        setTimeout(() => {
+          setLoading(false)
+        }, 500)
+        
+      } catch (err) {
+        console.error("Error loading data:", err)
+        setError(`Failed to load data: ${err.message}. Please refresh the page to try again.`)
         setLoading(false)
-      })
-      .catch((err) => {
-        console.error("Error loading Oscar data:", err)
-        setError("Failed to load Oscar data. Please refresh the page.")
-        setLoading(false)
-      })
+      }
+    }
+
+    loadAllData()
   }, [])
 
   useEffect(() => {
@@ -618,7 +721,12 @@ const MovieQuizApp = () => {
         <div className="app-background">
           <Box className="loading-container">
             <CircularProgress color="primary" />
-            <Typography className="loading-text">Loading {!movieData ? "Movie" : "Oscar"} Data...</Typography>
+            <Typography className="loading-text">{loadingProgress}</Typography>
+            <Typography variant="body2" sx={{ mt: 2, color: '#94a3b8', textAlign: 'center' }}>
+              {loading && movieData && !oscarData ? 'Loading Oscar data...' : 
+               loading && !movieData ? 'Loading movie database...' : 
+               'Preparing your movie experience...'}
+            </Typography>
           </Box>
         </div>
       </ThemeProvider>
