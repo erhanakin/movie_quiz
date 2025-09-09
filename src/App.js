@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import { CssBaseline, Container, Box, Grid, Paper, Button, CircularProgress, Typography } from "@mui/material"
-import { ArrowBack as BackIcon } from "@mui/icons-material"
+import { ArrowBack as BackIcon, Leaderboard as LeaderboardIcon } from "@mui/icons-material"
 import { generateFindCoActorQuestion } from "./utils/coStar"
 import { generateChainCoActorQuestion } from "./utils/coStarChain"
 import { generateFindMovieOfActorQuestion } from "./utils/findMovieOfActor"
@@ -15,6 +15,10 @@ import { generateFindMovieByPosterQuestion } from "./utils/findMovieByPoster"
 import "./App.css"
 import { generateOscarQuestion } from "./utils/oscarQuestions"
 import { getUltimateMixQuestions } from "./utils/ultimateMix"
+// NEW IMPORTS
+import NicknameSetup from "./components/NicknameSetup"
+import LeaderboardView from "./components/LeaderboardView"
+import leaderboardService from "./utils/globalLeaderboardService"
 
 // SIMPLIFIED: Back to basics with better error diagnostics
 const DATABASE_CONFIG = {
@@ -200,6 +204,7 @@ const CATEGORIES = [
   { name: "Ultimate Mix", icon: "🎲", generator: getUltimateMixQuestions },
 ]
 
+// UPDATED: Initial game state with leaderboard properties
 const INITIAL_GAME_STATE = {
   gameState: "category",
   showSubcategories: false,
@@ -225,6 +230,11 @@ const MovieQuizApp = () => {
   const [oscarData, setOscarData] = useState(null)
   const [mixedQuestions, setMixedQuestions] = useState([])
   const [mixIndex, setMixIndex] = useState(0)
+  
+  // NEW: Leaderboard state
+  const [playerNickname, setPlayerNickname] = useState("")
+  const [showLeaderboard, setShowLeaderboard] = useState(false)
+  const [needsNickname, setNeedsNickname] = useState(false)
   
   // ADDED: Device detection
   const device = useDeviceDetection()
@@ -289,6 +299,16 @@ const MovieQuizApp = () => {
   const timerProgress = (gameState.timeLeft / 20) * 100
   const isWarning = gameState.timeLeft <= 10 && gameState.timeLeft > 5
   const isCritical = gameState.timeLeft <= 5
+
+  // NEW: Check for existing nickname on app start
+  useEffect(() => {
+    const savedNickname = leaderboardService.getPlayerNickname()
+    if (savedNickname) {
+      setPlayerNickname(savedNickname)
+    } else {
+      setNeedsNickname(true)
+    }
+  }, [])
 
   // SMART: Mobile-optimized touch handling
   useEffect(() => {
@@ -401,6 +421,38 @@ const MovieQuizApp = () => {
     }
   }, [gameState.timeLeft, gameState.gameState, gameState.answerStatus, gameState.gameOver])
 
+  // NEW: Handle nickname setup
+  const handleNicknameSet = (nickname) => {
+    setPlayerNickname(nickname)
+    setNeedsNickname(false)
+  }
+
+  // NEW: Handle score submission
+  const handleGameOver = () => {
+    if (playerNickname && gameState.score > 0 && gameState.selectedCategory) {
+      try {
+        leaderboardService.submitScore(
+          playerNickname,
+          gameState.score,
+          gameState.selectedCategory,
+          difficulty
+        )
+        console.log(`Score ${gameState.score} submitted for ${gameState.selectedCategory}!`)
+      } catch (error) {
+        console.error('Failed to submit score:', error)
+      }
+    }
+  }
+
+  // NEW: Show/hide leaderboard functions
+  const handleShowLeaderboard = () => {
+    setShowLeaderboard(true)
+  }
+
+  const handleHideLeaderboard = () => {
+    setShowLeaderboard(false)
+  }
+
   const generateQuestion = async (category) => {
     if (!movieData || !filteredMovieData) return
 
@@ -507,7 +559,13 @@ const MovieQuizApp = () => {
     }
   }
 
+  // UPDATED: resetGame with score submission
   const resetGame = () => {
+    // Submit score before resetting
+    if (gameState.gameOver) {
+      handleGameOver()
+    }
+    
     if (gameState.selectedCategory === "Chain of Co-Actors") {
       setChainState(null)
     }
@@ -555,11 +613,18 @@ const MovieQuizApp = () => {
     }))
   }
 
+  // UPDATED: handleGoToMainMenu with score submission
   const handleGoToMainMenu = () => {
+    // Submit score if game was over
+    if (gameState.gameOver) {
+      handleGameOver()
+    }
+    
     setGameState(INITIAL_GAME_STATE)
     setChainState(null)
     setMixedQuestions([])
     setMixIndex(0)
+    setShowLeaderboard(false)
   }
 
   const renderCategorySelection = () => (
@@ -567,6 +632,26 @@ const MovieQuizApp = () => {
       <Typography variant="h1" className="main-title" gutterBottom align="center">
         {gameState.showSubcategories ? gameState.parentCategory.name : "Choose Your Movie Challenge"}
       </Typography>
+
+      {/* NEW: Leaderboard button */}
+      <Box sx={{ textAlign: 'center', mb: 2 }}>
+        <Button
+          startIcon={<LeaderboardIcon />}
+          onClick={handleShowLeaderboard}
+          sx={{ 
+            mb: 2, 
+            color: '#10b981',
+            borderColor: '#10b981',
+            '&:hover': { 
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              borderColor: '#059669'
+            }
+          }}
+          variant="outlined"
+        >
+          View Leaderboards
+        </Button>
+      </Box>
 
       {gameState.showSubcategories && (
         <Button startIcon={<BackIcon />} onClick={handleBackToCategories} sx={{ mb: 2, color: "primary.main" }}>
@@ -708,11 +793,38 @@ const MovieQuizApp = () => {
             <button className="secondary-button" onClick={handleGoToMainMenu}>
               Main Menu
             </button>
+            {/* NEW: Leaderboard button in game over */}
+            <button className="secondary-button" onClick={handleShowLeaderboard}>
+              View Leaderboard
+            </button>
           </Box>
         </Box>
       )}
     </Box>
   )
+
+  // NEW: Show nickname setup if needed
+  if (needsNickname) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <NicknameSetup onNicknameSet={handleNicknameSet} />
+      </ThemeProvider>
+    )
+  }
+
+  // NEW: Show leaderboard view
+  if (showLeaderboard) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <LeaderboardView 
+          playerNickname={playerNickname}
+          onBack={handleHideLeaderboard}
+        />
+      </ThemeProvider>
+    )
+  }
 
   if (loading || !movieData || !oscarData) {
     return (
