@@ -18,7 +18,7 @@ import { getUltimateMixQuestions } from "./utils/ultimateMix"
 // NEW IMPORTS
 import NicknameSetup from "./components/NicknameSetup"
 import LeaderboardView from "./components/LeaderboardView"
-import leaderboardService from "./utils/globalLeaderboardService"
+import leaderboardService from "./utils/leaderboardService"
 
 // SIMPLIFIED: Back to basics with better error diagnostics
 const DATABASE_CONFIG = {
