@@ -300,15 +300,28 @@ const MovieQuizApp = () => {
   const isWarning = gameState.timeLeft <= 10 && gameState.timeLeft > 5
   const isCritical = gameState.timeLeft <= 5
 
-  // NEW: Check for existing nickname on app start
-  useEffect(() => {
-    const savedNickname = leaderboardService.getPlayerNickname()
-    if (savedNickname) {
-      setPlayerNickname(savedNickname)
-    } else {
-      setNeedsNickname(true)
+// NEW: Check for existing nickname on app start
+useEffect(() => {
+  const initializeApp = async () => {
+    // Initialize Firebase leaderboard service
+    try {
+      await leaderboardService.initFirebase();
+      console.log('🔥 Firebase leaderboard service initialized');
+    } catch (error) {
+      console.warn('⚠️ Firebase initialization failed, using localStorage fallback:', error);
     }
-  }, [])
+    
+    // Check for saved nickname
+    const savedNickname = leaderboardService.getPlayerNickname();
+    if (savedNickname) {
+      setPlayerNickname(savedNickname);
+    } else {
+      setNeedsNickname(true);
+    }
+  };
+
+  initializeApp();
+}, [])
 
   // SMART: Mobile-optimized touch handling
   useEffect(() => {
@@ -428,18 +441,18 @@ const MovieQuizApp = () => {
   }
 
   // NEW: Handle score submission
-  const handleGameOver = () => {
+  const handleGameOver = async () => {
     if (playerNickname && gameState.score > 0 && gameState.selectedCategory) {
       try {
-        leaderboardService.submitScore(
+        await leaderboardService.submitScore(
           playerNickname,
           gameState.score,
           gameState.selectedCategory,
           difficulty
         )
-        console.log(`Score ${gameState.score} submitted for ${gameState.selectedCategory}!`)
+        console.log(`🎯 Score ${gameState.score} submitted for ${gameState.selectedCategory}!`)
       } catch (error) {
-        console.error('Failed to submit score:', error)
+        console.error('❌ Failed to submit score:', error)
       }
     }
   }
@@ -560,10 +573,10 @@ const MovieQuizApp = () => {
   }
 
   // UPDATED: resetGame with score submission
-  const resetGame = () => {
+  const resetGame = async () => {
     // Submit score before resetting
     if (gameState.gameOver) {
-      handleGameOver()
+      await handleGameOver()
     }
     
     if (gameState.selectedCategory === "Chain of Co-Actors") {
@@ -614,10 +627,10 @@ const MovieQuizApp = () => {
   }
 
   // UPDATED: handleGoToMainMenu with score submission
-  const handleGoToMainMenu = () => {
+  const handleGoToMainMenu = async () => {
     // Submit score if game was over
     if (gameState.gameOver) {
-      handleGameOver()
+      await handleGameOver()
     }
     
     setGameState(INITIAL_GAME_STATE)

@@ -9,7 +9,7 @@ const NicknameSetup = ({ onNicknameSet }) => {
   const [error, setError] = useState('');
   const [isChecking, setIsChecking] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError('');
     
     // Validation
@@ -32,23 +32,21 @@ const NicknameSetup = ({ onNicknameSet }) => {
 
     setIsChecking(true);
     
-    // Check if nickname exists
-    setTimeout(() => { // Small delay to show loading
-      try {
-        const exists = leaderboardService.checkNicknameExists(nickname);
-        if (exists) {
-          setError('This nickname is already taken. Please choose another one.');
-        } else {
-          // Save nickname and continue
-          leaderboardService.savePlayerNickname(nickname);
-          onNicknameSet(nickname);
-        }
-      } catch (err) {
-        setError('Error checking nickname. Please try again.');
-      } finally {
-        setIsChecking(false);
+    try {
+      const exists = await leaderboardService.checkNicknameExists(nickname);
+      if (exists) {
+        setError('This nickname is already taken. Please choose another one.');
+      } else {
+        // Save nickname and continue
+        leaderboardService.savePlayerNickname(nickname);
+        onNicknameSet(nickname);
       }
-    }, 500);
+    } catch (err) {
+      console.error('Error checking nickname:', err);
+      setError('Error checking nickname. Please try again.');
+    } finally {
+      setIsChecking(false);
+    }
   };
 
   const handleKeyPress = (e) => {

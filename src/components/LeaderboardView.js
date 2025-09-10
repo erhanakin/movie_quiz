@@ -36,26 +36,39 @@ const LeaderboardView = ({ playerNickname, onBack }) => {
   ];
 
   useEffect(() => {
-    loadLeaderboardData();
-    loadPlayerStats();
+    const loadData = async () => {
+      await loadLeaderboardData();
+      await loadPlayerStats();
+    };
+    loadData();
   }, []);
 
-  const loadLeaderboardData = () => {
+  const loadLeaderboardData = async () => {
     const data = {};
-    categories.forEach(category => {
-      data[category.key] = leaderboardService.getTopScores(category.key, 20);
-    });
+    for (const category of categories) {
+      try {
+        data[category.key] = await leaderboardService.getTopScores(category.key, 20);
+      } catch (error) {
+        console.error(`Error loading leaderboard for ${category.key}:`, error);
+        data[category.key] = [];
+      }
+    }
     setLeaderboardData(data);
   };
 
-  const loadPlayerStats = () => {
+  const loadPlayerStats = async () => {
     const stats = {};
-    categories.forEach(category => {
-      stats[category.key] = {
-        bestScore: leaderboardService.getPlayerBestScore(playerNickname, category.key),
-        rank: leaderboardService.getPlayerRank(playerNickname, category.key)
-      };
-    });
+    for (const category of categories) {
+      try {
+        stats[category.key] = {
+          bestScore: await leaderboardService.getPlayerBestScore(playerNickname, category.key),
+          rank: await leaderboardService.getPlayerRank(playerNickname, category.key)
+        };
+      } catch (error) {
+        console.error(`Error loading player stats for ${category.key}:`, error);
+        stats[category.key] = { bestScore: 0, rank: null };
+      }
+    }
     setPlayerStats(stats);
   };
 
@@ -68,9 +81,25 @@ const LeaderboardView = ({ playerNickname, onBack }) => {
     }
   };
 
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleDateString();
-  };
+const formatDate = (timestamp) => {
+  let date;
+  
+  if (timestamp && timestamp.seconds) {
+    date = new Date(timestamp.seconds * 1000);
+  } else if (timestamp && typeof timestamp === 'number') {
+    date = new Date(timestamp);
+  } else {
+    return 'Recent';
+  }
+  
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric', 
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+};
 
   const isPlayerScore = (nickname) => {
     return nickname.toLowerCase() === playerNickname.toLowerCase();

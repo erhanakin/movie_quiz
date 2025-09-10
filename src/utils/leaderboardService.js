@@ -1,18 +1,42 @@
 // src/utils/leaderboardService.js
-// Simple local storage implementation (we'll upgrade to Firebase later)
+// Hybrid service - Firebase primary, localStorage fallback
+
+import firebaseService from './firebaseLeaderboardService';
 
 export class LeaderboardService {
   constructor() {
     this.storageKey = 'movieQuizLeaderboards';
     this.nicknameKey = 'movieQuizPlayerNickname';
+    this.useFirebase = true; // Flag to enable/disable Firebase
+  }
+
+  async initFirebase() {
+    try {
+      const connected = await firebaseService.isConnected();
+      this.useFirebase = connected;
+      console.log(`🔥 Firebase ${connected ? 'enabled' : 'disabled'} for leaderboard`);
+      return connected;
+    } catch (error) {
+      console.warn('⚠️ Firebase initialization failed, falling back to localStorage');
+      this.useFirebase = false;
+      return false;
+    }
   }
 
   // Check if nickname already exists
-  checkNicknameExists(nickname) {
+  async checkNicknameExists(nickname) {
+    if (this.useFirebase) {
+      try {
+        return await firebaseService.checkNicknameExists(nickname);
+      } catch (error) {
+        console.warn('Firebase checkNicknameExists failed, falling back to localStorage');
+      }
+    }
+    
+    // localStorage fallback
     const allData = this.getAllLeaderboardData();
     const allNicknames = new Set();
     
-    // Collect all nicknames from all categories
     Object.values(allData).forEach(categoryScores => {
       categoryScores.forEach(score => {
         allNicknames.add(score.nickname.toLowerCase());
@@ -33,7 +57,18 @@ export class LeaderboardService {
   }
 
   // Submit score to leaderboard
-  submitScore(nickname, score, category, difficulty = 'easy') {
+  async submitScore(nickname, score, category, difficulty = 'easy') {
+    if (this.useFirebase) {
+      try {
+        await firebaseService.submitScore(nickname, score, category, difficulty);
+        console.log('✅ Score submitted to Firebase');
+        return true;
+      } catch (error) {
+        console.warn('Firebase submitScore failed, falling back to localStorage:', error);
+      }
+    }
+    
+    // localStorage fallback
     const allData = this.getAllLeaderboardData();
     
     if (!allData[category]) {
@@ -60,15 +95,36 @@ export class LeaderboardService {
   }
 
   // Get top scores for a category
-  getTopScores(category, limit = 20) {
+  async getTopScores(category, limit = 20) {
+    if (this.useFirebase) {
+      try {
+        const firebaseScores = await firebaseService.getTopScores(category, limit);
+        if (firebaseScores.length > 0) {
+          return firebaseScores;
+        }
+      } catch (error) {
+        console.warn('Firebase getTopScores failed, falling back to localStorage');
+      }
+    }
+    
+    // localStorage fallback
     const allData = this.getAllLeaderboardData();
     const categoryScores = allData[category] || [];
     return categoryScores.slice(0, limit);
   }
 
   // Get player's rank in category
-  getPlayerRank(nickname, category) {
-    const categoryScores = this.getTopScores(category, 100);
+  async getPlayerRank(nickname, category) {
+    if (this.useFirebase) {
+      try {
+        return await firebaseService.getPlayerRank(nickname, category);
+      } catch (error) {
+        console.warn('Firebase getPlayerRank failed, falling back to localStorage');
+      }
+    }
+    
+    // localStorage fallback
+    const categoryScores = await this.getTopScores(category, 100);
     const rank = categoryScores.findIndex(score => 
       score.nickname.toLowerCase() === nickname.toLowerCase()
     ) + 1;
@@ -76,8 +132,17 @@ export class LeaderboardService {
   }
 
   // Get player's best score in category
-  getPlayerBestScore(nickname, category) {
-    const categoryScores = this.getTopScores(category, 100);
+  async getPlayerBestScore(nickname, category) {
+    if (this.useFirebase) {
+      try {
+        return await firebaseService.getPlayerBestScore(nickname, category);
+      } catch (error) {
+        console.warn('Firebase getPlayerBestScore failed, falling back to localStorage');
+      }
+    }
+    
+    // localStorage fallback
+    const categoryScores = await this.getTopScores(category, 100);
     const playerScores = categoryScores.filter(score => 
       score.nickname.toLowerCase() === nickname.toLowerCase()
     );

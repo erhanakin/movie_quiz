@@ -82,3 +82,13 @@ jspm_packages/
 public/assets/movie_data_part*.json.gz
 # Keep the .gitignore entry for movie_data.json for safety
 public/assets/movie_data.json
+
+# Firebase & Environment Variables
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+dist/
+
+# Firebase Functions
+functions/node_modules/
+functions/.runtimeconfig.json
