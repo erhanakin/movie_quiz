@@ -19,6 +19,8 @@ import { getUltimateMixQuestions } from "./utils/ultimateMix"
 import NicknameSetup from "./components/NicknameSetup"
 import LeaderboardView from "./components/LeaderboardView"
 import leaderboardService from "./utils/leaderboardService"
+import adMobService from './utils/adMobService';
+
 
 // SIMPLIFIED: Back to basics with better error diagnostics
 const DATABASE_CONFIG = {
@@ -450,9 +452,16 @@ useEffect(() => {
           gameState.selectedCategory,
           difficulty
         )
-        console.log(`🎯 Score ${gameState.score} submitted for ${gameState.selectedCategory}!`)
+        console.log(`Score ${gameState.score} submitted for ${gameState.selectedCategory}!`)
+        
+        // NEW: Track game completion and show ad if needed
+        if (adMobService.onQuestionAnswered()) {
+          console.log('Showing interstitial ad...');
+          await adMobService.showInterstitialAd();
+        }
+        
       } catch (error) {
-        console.error('❌ Failed to submit score:', error)
+        console.error('Failed to submit score:', error)
       }
     }
   }
@@ -538,10 +547,17 @@ useEffect(() => {
     }
   }
 
-  const handleAnswer = (answer) => {
+  const handleAnswer = async (answer) => {
     if (gameState.timeExpired || gameState.answerStatus) return
 
     const isCorrect = answer === gameState.currentQuestion.correctAnswer
+    
+    // Track every question answer for ads
+    if (adMobService.onQuestionAnswered()) {
+      console.log('Showing interstitial ad after question...');
+      await adMobService.showInterstitialAd();
+    }
+    
     setGameState((prev) => ({
       ...prev,
       score: isCorrect ? prev.score + 1 : prev.score,
